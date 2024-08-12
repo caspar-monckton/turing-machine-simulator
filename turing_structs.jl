@@ -8,7 +8,7 @@ abstract type AbstractTuringMachine end
 """
 Tape for storing the memory cells that a turing machine can access. Can have multiple turing 
 machines running on it at a time. Tape consists of a left and right working region and a centre 
-which can be indexed from -length(left_working_region) to length(right_working_region) including 0.
+which can be indexed from -length(`left_working_region`) to length(`right_working_region`) including 0.
 The left, right, and centre working regions together are referred to as the 'current working 
 region'.
 """
@@ -109,7 +109,7 @@ end
 """
     emptytape(unbound_memory_sym::String = "EMPTY")
 
-Create a new [`Tape`](@ref) with no initialised cells and 'unbound_memory_sym' as the symbol that 
+Create a new [`Tape`](@ref) with no initialised cells and '`unbound_memory_sym`' as the symbol that 
 is read when a bound [`TuringMachine`](@ref) goes beyond written areas.
 
 #Examples
@@ -265,7 +265,7 @@ end
 """
     load!(tape::Tape, machine::TuringMachine)
 
-Add [`push!`](@ref) 'machine' to 'tape.child_machines'.
+Add [`push!`](@ref) 'machine' to '`tape.child_machines`'.
 """
 function load!(tape::Tape, machine::TuringMachine)
     if machine in tape.child_machines
@@ -278,7 +278,7 @@ end
 """
     reset!(machine::TuringMachine)
 
-Set 'machine.position' to 0 and 'machine.current_state' to 'machine.start_state'.
+Set 'machine.position' to 0 and '`machine.current_state`' to '`machine.start_state`'.
 """
 function reset!(machine::TuringMachine)
     machine.position = 0
@@ -287,8 +287,8 @@ function reset!(machine::TuringMachine)
 end
 
 """
-    reset!(tape::Tape, input::Vector{String} = [tape.unbound_memory_sym]; middle::Integer = 1)
-Set working region of tape to be 'input' which defaults to a single 'tape.unbound_memory_sym'. Set 
+    reset!(tape::Tape, input::Vector{String} = [tape.`unbound_memory_sym`]; middle::Integer = 1)
+Set working region of tape to be 'input' which defaults to a single '`tape.unbound_memory_sym`'. Set 
 the 'middle' of the tape to be at index 'middle'.
 """
 function reset!(tape::Tape, input::Vector{String} = [tape.unbound_memory_sym]; middle::Integer = 1)
@@ -306,7 +306,7 @@ end
 """
     unload!(tape::Tape, machine::TuringMachine)
 
-Remove 'machine' from 'tape.child_machines'.
+Remove 'machine' from '`tape.child_machines`'.
 """
 function unload!(tape::Tape, machine::TuringMachine)
     if !(machine in tape.child_machines)
