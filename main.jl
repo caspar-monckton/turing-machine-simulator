@@ -155,6 +155,32 @@ function main()
                     \tunbind [tape index] [machine index]: Unbind the [tape index]th tape from the [machine index]th machine.
                     """, unbind_f)
 
+
+    function remove_f(object_type::String, index::String)
+        i = parse(Int, index)
+        if object_type == "-t"
+            for m in filter((x -> (x.parent_tape == tapes[i])), [m for m in machines])
+                unbind!(m)
+            end
+            deleteat!(tapes, i)
+        elseif object_type == "-m"
+            t = machines[i].parent_tape
+            unload(t, machines[i])
+            deleteat!(machines, i)
+        else
+            throw(error("Object type not recognised."))
+        end
+    end
+
+    remove = Command("remove", 
+                    """
+                    Remove object from the current environment.
+
+                    Use cases:
+                    \tremove -m [index]: Remove machine at [index].
+                    \tremove -t [index]: Remove tape at [index].
+                    """, remove_f)
+
     commands[help.name] = help
     commands[quit.name] = quit
     commands[load.name] = load
@@ -162,6 +188,7 @@ function main()
     commands[run.name] = run
     commands[bind.name] = bind
     commands[unbind.name] = unbind
+    commands[remove.name] = remove
 
     while true
         print(">> ")
@@ -172,7 +199,7 @@ function main()
         catch e
             if isa(e, KeyError)
                 println("Invalid command. Try 'help' to see list of available commands.")
-            elseif isa(e, MethodError)
+            elseif isa(e, MethodError) || isa(e, ArgumentError)
                 println("Invalid arguments. Try 'help $command_name' for information on how to use $command_name.")
             else
                 throw(e)
