@@ -4,6 +4,14 @@ export parseline, compileturingmachine
     parseline(line::String)
 
 Split string separated by ':' and ',' into command and argument list.
+
+#Examples
+```
+julia> parseline("accepts: qHALT1, qHALT2")
+2-element Vector{Any}:
+ "accepts"
+ SubString{String}["qHalt1", "qHalt2"]
+```
 """
 function parseline(line::String)
     if line == ""

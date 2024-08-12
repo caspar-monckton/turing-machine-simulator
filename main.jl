@@ -1,12 +1,20 @@
 include("TuringMachines.jl")
 using .TuringMachines
 
+"""
+Command that user can invoke by name to achieve functionality via a callback function.
+"""
 struct Command
     name::String
     documentation::String
     callback::Function
 end
 
+"""
+    about(command::Command)
+
+Print the documentation for 'command'.
+"""
 function about(command::Command)
     println(command.documentation)
 end
