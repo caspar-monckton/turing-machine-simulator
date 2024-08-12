@@ -315,3 +315,13 @@ function unload!(tape::Tape, machine::TuringMachine)
     filter!(x -> x !== machine, tape.child_machines)
     return nothing
 end
+
+"""
+    unbind!(machine::TuringMachine)
+
+Set '`machine.parent_tape = nothing`'.
+"""
+function unbind!(machine::TuringMachine)
+    machine.parent_tape = nothing
+    return nothing
+end
