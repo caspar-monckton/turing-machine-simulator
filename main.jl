@@ -152,7 +152,7 @@ function main()
                     Remove turing machine from tape.
 
                     Use cases:
-                    \tbind [tape index] [machine index]: Unbind the [tape index]th tape from the [machine index]th machine.
+                    \tunbind [tape index] [machine index]: Unbind the [tape index]th tape from the [machine index]th machine.
                     """, unbind_f)
 
     commands[help.name] = help

@@ -108,6 +108,7 @@ function compileturingmachine(file_path::String)
                 end
             catch e
                 println("Line $lindex, $(typeof(e)): $(e.msg)")
+                return
             end
         end
     end
