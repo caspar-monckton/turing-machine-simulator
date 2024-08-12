@@ -1,0 +1,12 @@
+name: test_machine
+accepts: qACCEPT
+start: q0
+alphabet: a, b, EMPTY
+
+rule: q0, a, q0, b, RIGHT
+rule: q0, b, q0, b, RIGHT
+rule: q0, EMPTY, q1, a, LEFT
+
+rule: q1, a, q1, a, LEFT
+rule: q1, b, q1, EMPTY, LEFT
+rule: q1, EMPTY, q0, a, RIGHT
