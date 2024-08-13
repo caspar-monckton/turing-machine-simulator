@@ -23,7 +23,7 @@ function main()
     commands = Dict()
     tapes = Tape[]
     machines = TuringMachine[]
-
+    # 'help' command
     function help_f() 
         for command_name in keys(commands)
             println(command_name)
@@ -45,6 +45,7 @@ function main()
             help_f
     )
 
+    # 'quit' command
     function quit_f()
         print("Quitting...")
         exit()
@@ -52,6 +53,7 @@ function main()
 
     quit = Command("quit", """Exit the environment loop.""", quit_f)
 
+    # 'load' command
     function load_f(object_type::String, field_parameters::String)
         if object_type == "-m"
             m = compileturingmachine(field_parameters)
@@ -74,8 +76,9 @@ function main()
                     load_f
             )
     
+    # 'view' command
     function view_f(region::String)
-        if region == "-env"
+        if region == "env"
             println("Turing Machines: ")
             for (x, machine) in enumerate(machines)
                 println("$x: $machine")
@@ -94,11 +97,12 @@ function main()
                     View something in the environment or the entire environment.
 
                     Use cases:
-                    \t view -env: Print all turing machines and tapes currently loaded into the environment.
+                    \t view env: Print all turing machines and tapes currently loaded into the environment.
                     """, 
                     view_f
     )
 
+    # 'run' command
     function run_f(index::String, step::String = "1", printing::String = "-p")
         i = parse(Int, index)
         iterations = parse(Int, step)
@@ -122,7 +126,8 @@ function main()
                     \trun [index] [iterations] -b: run tape as above but do not print state of tape after each iteration.
                     """, run_f
     )
-
+    
+    # 'bind' command
     function bind_f(tape_index::String, machine_index::String)
 
         mi = parse(Int, machine_index)
@@ -131,15 +136,40 @@ function main()
         load!(tapes[ti], machines[ti])
     end
 
+    function bind_f(tape_index::String, string_value::String, start_index::String)
+        tape_start = split(string_value, "-")
+        ti = parse(Int, tape_index)
+        si = parse(Int, start_index)
+        reset!(tapes[ti], tape_start, si)
+    end
+
+    function bind_f(type::String, tape_index::String, alphabet::String, length::String)
+        if (type == "-r")
+            al = map(String, split(alphabet, "-"))
+            l = parse(Int, length)
+            start = rand(al, l)
+
+            ti = parse(Int, tape_index)
+            reset!(tapes[ti], start, 1)
+        else
+            throw(error("Invalid tag"))
+        end
+    end
+
     bind = Command("bind", 
                     """
                     Bind turing machine to tape.
 
                     Use cases:
                     \tbind [tape index] [machine index]: Bind the [tape index]th tape with the [machine index]th machine.
+                    \tbind [tape index] [string array (separated by '-')] [start index]: load tape at 
+                    [tape index] with [string array] and centre it at [start index].
+                    \tbind -r [tape index] [alphabet (separated by '-')] [length]:
+                    load tape at [tape index] with [length] letters taken from [alphabet].
                     """, bind_f
     )
 
+    # 'unbind' command
     function unbind_f(tape_index::String, machine_index::String)
         mi = parse(Int, machine_index)
         ti = parse(Int, tape_index)
@@ -156,6 +186,7 @@ function main()
                     """, unbind_f)
 
 
+    # 'remove' command
     function remove_f(object_type::String, index::String)
         i = parse(Int, index)
         if object_type == "-t"
@@ -197,13 +228,14 @@ function main()
         try 
             (commands[command_name].callback)(args...)
         catch e
-            if isa(e, KeyError)
+            throw(e)
+            """if isa(e, KeyError)
                 println("Invalid command. Try 'help' to see list of available commands.")
             elseif isa(e, MethodError) || isa(e, ArgumentError)
                 println("Invalid arguments. Try 'help $command_name' for information on how to use $command_name.")
             else
                 throw(e)
-            end
+            end"""
         end
     end
 end

@@ -32,6 +32,7 @@ computing based on the cells of the tape.
 """
 mutable struct TuringMachine <: AbstractTuringMachine
     name::String
+    "Symbols that the turing machine recognises."
     alphabet::Vector{String}
     start_state::String
     current_state::String
@@ -287,11 +288,11 @@ function reset!(machine::TuringMachine)
 end
 
 """
-    reset!(tape::Tape, input::Vector{String} = [tape.`unbound_memory_sym`]; middle::Integer = 1)
+    reset!(tape::Tape, input::Vector{String} = [tape.`unbound_memory_sym`], middle::Integer = 1)
 Set working region of tape to be 'input' which defaults to a single '`tape.unbound_memory_sym`'. Set 
 the 'middle' of the tape to be at index 'middle'.
 """
-function reset!(tape::Tape, input::Vector{String} = [tape.unbound_memory_sym]; middle::Integer = 1)
+function reset!(tape::Tape, input::Vector{String} = [tape.unbound_memory_sym], middle::Integer = 1)
     for machine in tape.child_machines
         reset!(machine)
     end
