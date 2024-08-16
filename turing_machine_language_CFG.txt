@@ -9,8 +9,8 @@
 <state_list>       ::= <state> | <state_list>;
 <state>            ::= @ <identifier> | <identifier>;
 <identifier_list>  ::= <identifier> | <identifier_list>;
-<identifier>       ::= <char> | <identifier>;
-<number>           ::= <digit> | <number>
+<identifier>       ::= <char> <identifier>;
+<number>           ::= <digit> <number>
 <char>             ::= <digit> | <alpha> | "_";
 <digit>            ::= "0" | "1" | "2" | "3" |
                        "4" | "5" | "6" | "7" | "8" | "9"
@@ -22,4 +22,4 @@
                        "j" | "k" | "l" | "m" | "n" | "o" | "p" | 
                        "q" | "r" | "s" | "t" | "u" | "v" | "w" | 
                        "x" | "y" | "z"
-<EOL>              ::= "\n" | <EOL>
+<EOL>              ::= "\n" | "\r" | <EOL>
