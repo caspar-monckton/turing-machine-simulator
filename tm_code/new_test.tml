@@ -1,5 +1,5 @@
 machine test_machine:
-    accept: q3
+    accept: q3, q7
     start: q1
     recognise: 0, 1
 
@@ -17,7 +17,7 @@ end
 machine outer_machine:
     accept: q1
     start: q0
-    recognise 0, 1
+    recognise: 0, 1
 
     state q0: 
         1 -> q0, 1, LEFT

@@ -206,7 +206,7 @@ state, and move in the corresponding direction.
 """
 function stepcomputation!(machine::TuringMachine)
     if ishalted(machine)
-        return
+        return 1
     end
 
     tape = machine.parent_tape
@@ -217,14 +217,14 @@ function stepcomputation!(machine::TuringMachine)
     key = (machine.current_state, read(tape, machine.position))
     #println(key)
     if !(key in keys(machine.instruction_set))
-        throw(error("Turing machine encountered unrecognised symbol or state."))
+        return -1
     end
 
     step_result = machine.instruction_set[key]
     write!(tape, machine.position, step_result[2])
     machine.current_state = step_result[1]
     machine.position += step_result[3]
-    return nothing
+    return 0
 end
 
 # If two or more Turing machines try to write the same cell, select one at random and have only 
