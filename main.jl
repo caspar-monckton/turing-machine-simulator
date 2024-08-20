@@ -230,7 +230,7 @@ function main()
         catch e
             if isa(e, KeyError)
                 println("Invalid command. Try 'help' to see list of available commands.")
-            elseif isa(e, MethodError) || isa(e, ArgumentError)
+            elseif isa(e, MethodError) || isa(e, ArgumentError) || isa(e, BoundsError)
                 println("Invalid arguments. Try 'help $command_name' for information on how to use $command_name.")
             else
                 throw(e)
