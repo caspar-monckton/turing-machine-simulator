@@ -7,69 +7,27 @@ mutable struct Tokeniser
 end
 
 #Tokens:
-struct Whitespace <: Token
+
+struct BasicToken{T} <: Token
     value::String
 end
 
-struct Identifier <: Token
-    value::String
-end
-
-struct State <: Token
-    value::String
-end
-
-struct Accept <: Token
-    value::String
-end
-
-struct Start <: Token
-    value::String
-end
-
-struct Recognise <: Token
-    value::String
-end
-
-struct Machine <: Token
-    value::String
-end
-
-struct Direction <: Token
-    value::String
-end
-
-struct Map <: Token
-    value::String
-end
-
-struct LeftParenthesis <: Token
-    value::String
-end
-
-struct RightParenthesis <: Token
-    value::String
-end
-
-struct Colon <: Token
-    value::String
-end
-
-struct Comma <: Token
-    value::String
-end
-
-struct EOL <: Token
-    value::String
-end
-
-struct Terminator <: Token
-    value::String
-end
-
-struct Referencer <: Token
-    value::String
-end
+const Whitespace = BasicToken{:Whitespace}
+const Identifier = BasicToken{:Identifier}
+const Direction = BasicToken{:Direction}
+const Map = BasicToken{:Map}
+const State = BasicToken{:State}
+const Recognise = BasicToken{:Recognise}
+const Start = BasicToken{:Start}
+const Accept = BasicToken{:Accept}
+const Machine = BasicToken{:Machine}
+const Colon = BasicToken{:Colon}
+const Comma = BasicToken{:Comma}
+const EOL = BasicToken{:EOL}
+const Terminator = BasicToken{:Terminator}
+const Referencer = BasicToken{:Referencer}
+const LeftParenthesis = BasicToken{:LeftParenthesis}
+const RightParenthesis = BasicToken{:RightParenthesis}
 
 #AST Nodes:
 abstract type ASTNode end
@@ -692,6 +650,10 @@ function parse!(tokens::TokenStream, ::Type{T} where T <: Program)
         throw(error("Parser error: Expected 'Identifier' for main call, not '$(typeof(current))'."))
     end
     return Program(machines, main)
+end
+
+function generate(ast::Program)
+    return 1
 end
 
 tokens = lex("tm_code/new_test.tml")

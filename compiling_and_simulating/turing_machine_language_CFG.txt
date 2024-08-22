@@ -1,6 +1,6 @@
-<machine_call>     ::= <identifier> "(" <identifier> "," <digit> ")"
+<machine_call>     ::= <identifier> "(" <identifier> ")"
 <machine>          ::= "machine" <identifier> ":" <EOL> <machine_body> "end";
-<machine_body>     ::= <meta_data>;
+<machine_body>     ::= <meta_data> <declaration_list>;
 <declaration_list> ::= <declaration> | <declaration_list>;
 <declaration>      ::= "state" <identifier> ":" <EOL> <transition_list> "end";
 <transition_list>  ::= <transition> | <transition_list>;
