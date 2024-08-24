@@ -170,6 +170,13 @@ end
 
 function generate(machine::MachineDef)
     lines = Vector{String}([createlabel(machine.name.value)])
+    start = ""
+    if machine.start.item.value isa MachineRef
+        start = machine.start.item.value.name
+    else
+        start = machine.start.item.value.value
+    end
+    push!(lines, jump("$(machine.name.value)_$start"))
     for declaration in machine.content
         lines = vcat(lines, generate(declaration, machine))
     end
