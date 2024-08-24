@@ -21,6 +21,22 @@ function addregs(reg1::String, reg2::String)
     return "\tADD $reg1, $reg2"
 end
 
+function addregs(reg1::String, val::Integer)
+    if !(reg1 in registers)
+        throw(error("Generator error: Invalid register destination specified."))
+    end
+
+    return "\tADD $reg1, $val"
+end
+
+function subregs(reg1::String, val::Integer)
+    if !(reg1 in registers)
+        throw(error("Generator error: Invalid register destination specified."))
+    end
+
+    return "\tSUB $reg1, $val"
+end
+
 function initdata(name::String, size::String, default_value::Integer, amount::Integer = 1)
     if !(size in ["DB", "DW", "DD"])
         throw(error("Generator error: Invalid data size specifier."))
@@ -119,9 +135,9 @@ function generate(transition::Transition, parent::Declaration, superparent::Mach
     push!(lines, movtoreg("edx", Int(transition.output2.value[1])))
     push!(lines, movtodata("eax", "edx"))
     if transition.output3.value == "RIGHT"
-        push!(lines, increg("eax"))
+        push!(lines, addregs("eax", 32))
     elseif transition.output3.value == "LEFT"
-        push!(lines, decreg("eax"))
+        push!(lines, subregs("eax", 32))
     end
 
     if transition.output1 in superparent.accept.items
@@ -130,7 +146,7 @@ function generate(transition::Transition, parent::Declaration, superparent::Mach
         if transition.output1.value isa MachineRef
             push!(lines, jump(transition.output1.value.name.value))
         elseif transition.output1.value isa Identifier
-            push!(lines, jump("$(superparent.name.value)_$(parent.name.value)_$(transition.output1.value.value)"))
+            push!(lines, jump("$(superparent.name.value)_$(transition.output1.value.value)"))
         end
     end
     return lines
@@ -168,16 +184,14 @@ function generate(ast::Program)
     push!(lines, initdata("tape", "DD", Int('0'), tape_size))
     push!(lines, createsection(".text"))
     push!(lines, declareglobal("_start"))
-
+    push!(lines, createlabel("_start"))
     for (x, ident) in enumerate(ast.main.arguments)
         push!(lines, movtoreg("ecx", Int(ident.value[1])))
         push!(lines, movtoreg("eax", "tape", is_address = true))
-        push!(lines, movtoreg("ebx", (initial_position + x - 1)))
+        push!(lines, movtoreg("ebx", (initial_position + x*32 - 1)))
         push!(lines, addregs("eax", "ebx"))
         push!(lines, movtodata("eax", "ecx"))
     end
-
-    push!(lines, createlabel("_start"))
     push!(lines, movtoreg("ebx", initial_position))
     push!(lines, movtoreg("eax", "tape"; is_address = true))
     push!(lines, addregs("eax", "ebx"))

@@ -13,7 +13,7 @@ function compiletml(source::String, destination::String)
 
     open(destination, "w") do file
         for line in asm
-            write(destination, line*"\n")
+            write(file, line*"\n")
         end
     end
 end

@@ -67,7 +67,6 @@ function read_token!(tokeniser::Tokeniser, matchee::String)
             end
             token = matches[end]
             tokeniser.position += length(token.value)
-            println(token)
             return token
         end
     end
@@ -132,8 +131,6 @@ function lex(file_path::String)
     file_string = open(file_path, "r") do file
         read(file, String)
     end
-
-    println(file_string)
     
     while tokeniser.position <= length(file_string)
         token = read_token!(tokeniser, file_string)
