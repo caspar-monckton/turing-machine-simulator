@@ -466,6 +466,10 @@ function parse!(tokens::TokenStream, ::Type{T} where T <: MachineDef)
         while current isa State
             push!(content, parse!(tokens, Declaration))
             current = peek!(tokens)
+            if current isa EOL
+                consume!(tokens)
+                current = peek!(tokens)
+            end
         end
     else
         throw(error("Parser error: Expected 'Identifier' or '@ Identifier', not '$(typeof(current))'."))

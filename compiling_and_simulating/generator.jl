@@ -135,11 +135,11 @@ function generate(transition::Transition, parent::Declaration, superparent::Mach
     push!(lines, movtoreg("edx", Int(transition.output2.value[1])))
     push!(lines, movtodata("eax", "edx"))
     if transition.output3.value == "RIGHT"
-        push!(lines, addregs("eax", 32))
+        push!(lines, addregs("eax", 4))
     elseif transition.output3.value == "LEFT"
-        push!(lines, subregs("eax", 32))
+        push!(lines, subregs("eax", 4))
     end
-
+    push!(lines, movtoreg("ecx", "eax"))
     if transition.output1 in superparent.accept.items
         push!(lines, jump("_HALT"))
     else
@@ -188,18 +188,18 @@ function generate(ast::Program)
     initial_position = tape_size >> 1
     
     lines = Vector{String}([createsection(".data")])
-    push!(lines, initdata("tape", "DD", Int('0'), tape_size))
+    push!(lines, initdata("tape", "DD", Int('E'), tape_size))
     push!(lines, createsection(".text"))
     push!(lines, declareglobal("_start"))
     push!(lines, createlabel("_start"))
     for (x, ident) in enumerate(ast.main.arguments)
         push!(lines, movtoreg("ecx", Int(ident.value[1])))
         push!(lines, movtoreg("eax", "tape", is_address = true))
-        push!(lines, movtoreg("ebx", (initial_position + x*32 - 1)))
+        push!(lines, movtoreg("ebx", ((initial_position + x - 1)*4)))
         push!(lines, addregs("eax", "ebx"))
         push!(lines, movtodata("eax", "ecx"))
     end
-    push!(lines, movtoreg("ebx", initial_position))
+    push!(lines, movtoreg("ebx", initial_position*4))
     push!(lines, movtoreg("eax", "tape"; is_address = true))
     push!(lines, addregs("eax", "ebx"))
     push!(lines, movtoreg("ecx", "eax"))
