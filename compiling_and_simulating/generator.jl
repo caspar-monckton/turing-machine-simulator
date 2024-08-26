@@ -176,7 +176,7 @@ function generate(declaration::Declaration, parent::MachineDef)
     push!(lines, createlabel("$(parent.name.value)_$(declaration.name.value)"))
     lines = vcat(lines, writestdout("tape", 1000))
     for transition in declaration.list
-        push!(lines, compregs("ecx", string(Int(transition.input.value[1]))))
+        push!(lines, compregs("cl", string(Int(transition.input.value[1]))))
         push!(lines, jump("$(parent.name.value)_$(declaration.name.value)_$(Int(transition.input.value[1]))", "E"))
     end
     push!(lines, jump("_FAIL"))
