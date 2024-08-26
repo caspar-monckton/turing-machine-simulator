@@ -3,7 +3,7 @@ const registers = [
     "ax",  "bx",  "cx",  "dx",
     "al",  "bl",  "cl",  "dl",
     "ah",  "bh",  "ch",  "dh",
-    "edi", "esi", "edx"
+    "edi", "esi", "ebp"
 ]
 
 createlabel(name::String) = "$name:"
@@ -131,11 +131,16 @@ end
 #returns multiple lines of assembly!!
 function writestdout(address::String, size::Integer)::Vector{String}
     out = Vector{String}()
+    # output is pushed into eax which is where we store the address of the current tape cell. So we need to preserve this value.
+    push!(out, movtoreg("ebp", "eax"; is_address = true))
+
     push!(out, movtoreg("edi", 2))
-    push!(out, movtoreg("esi", address, is_address = true))
+    push!(out, movtoreg("esi", address; is_address = true))
     push!(out, movtoreg("edx", size))
     push!(out, interrupt("80h"))
-    
+
+    # restore cell address to eax.
+    push!(out, movtoreg("eax", "ebp"; is_address = true))
     return out
 end
 
