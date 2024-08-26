@@ -140,7 +140,7 @@ function writestdout(address::String, size::Integer)::Vector{String}
 
 
 
-    push!()out, movtoreg("eax", 4)
+    push!(out, movtoreg("eax", 4))
     push!(out, movtoreg("ebi", 1))
     push!(out, movtoreg("eci", address; is_address = true))
     push!(out, movtoreg("edx", size))
