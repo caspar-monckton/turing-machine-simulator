@@ -151,8 +151,8 @@ timesinstruction(iterations::Integer, instruction::String) = "\ttimes $iteration
 function generate(transition::Transition, parent::Declaration, superparent::MachineDef)
     lines = Vector{String}()
     push!(lines, createlabel("$(superparent.name.value)_$(parent.name.value)_$(Int(transition.input.value[1]))"))
-    push!(lines, movtoreg("edx", Int(transition.output2.value[1])))
-    push!(lines, movtodata("eax", "edx"))
+    push!(lines, movtoreg("dl", Int(transition.output2.value[1])))
+    push!(lines, movtodata("eax", "dl"))
     if transition.output3.value == "RIGHT"
         push!(lines, addregs("eax", BYTE_ADDRESS_MULTIPLIER))
     elseif transition.output3.value == "LEFT"
