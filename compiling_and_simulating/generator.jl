@@ -3,7 +3,7 @@ const registers = [
     "ax",  "bx",  "cx",  "dx",
     "al",  "bl",  "cl",  "dl",
     "ah",  "bh",  "ch",  "dh",
-    "rdi", "rsi", "rdx"
+    "edi", "esi", "edx"
 ]
 
 createlabel(name::String) = "$name:"
@@ -131,9 +131,9 @@ end
 #returns multiple lines of assembly!!
 function writestdout(address::String, size::Integer)::Vector{String}
     out = Vector{String}()
-    push!(out, movtoreg("rdi", 2))
-    push!(out, movtoreg("rsi", address, is_address = true))
-    push!(out, movtoreg("rdx", size))
+    push!(out, movtoreg("edi", 2))
+    push!(out, movtoreg("esi", address, is_address = true))
+    push!(out, movtoreg("edx", size))
     push!(out, interrupt("80h"))
     
     return out

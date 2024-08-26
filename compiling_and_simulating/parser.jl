@@ -389,7 +389,7 @@ function parse!(tokens::TokenStream, ::Type{T} where T <: MachineCall)
                 break
             end
         end
-    else
+    elseif !(current isa RightParenthesis)
         throw(error("Parser error: Expected 'Identifier' as argument, not '$(typeof(current))'."))
     end
 
