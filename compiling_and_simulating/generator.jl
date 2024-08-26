@@ -2,7 +2,8 @@ const registers = [
     "eax", "ebx", "ecx", "edx", 
     "ax",  "bx",  "cx",  "dx",
     "al",  "bl",  "cl",  "dl",
-    "ah",  "bh",  "ch",  "dh" 
+    "ah",  "bh",  "ch",  "dh",
+    "rdi", "rsi", "rdx"
 ]
 
 createlabel(name::String) = "$name:"
@@ -127,6 +128,17 @@ function compregs(reg1::String, val::String)
     return "\tCMP $reg1, $val"
 end
 
+#returns multiple lines of assembly!!
+function writestdout(address::String, size::Integer)::Vector{String}
+    out = Vector{String}()
+    push!(out, movtoreg("rdi", 2))
+    push!(out, movtoreg("rsi", address, is_address = true))
+    push!(out, movtoreg("rdx", size))
+    push!(out, interrupt("80h"))
+    
+    return out
+end
+
 timesinstruction(iterations::Integer, instruction::String) = "\ttimes $iterations $instruction"
 
 function generate(transition::Transition, parent::Declaration, superparent::MachineDef)
@@ -155,6 +167,7 @@ end
 function generate(declaration::Declaration, parent::MachineDef)
     lines = Vector{String}()
     push!(lines, createlabel("$(parent.name.value)_$(declaration.name.value)"))
+    lines = vcat(lines, writestdout("tape", 1000))
     for transition in declaration.list
         push!(lines, compregs("ecx", string(Int(transition.input.value[1]))))
         push!(lines, jump("$(parent.name.value)_$(declaration.name.value)_$(Int(transition.input.value[1]))", "E"))
