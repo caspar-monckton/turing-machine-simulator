@@ -1,3 +1,5 @@
+const BYTE_ADDRESS_MULTIPLIER = 1
+
 const registers = [
     "eax", "ebx", "ecx", "edx", 
     "ax",  "bx",  "cx",  "dx",
@@ -152,11 +154,11 @@ function generate(transition::Transition, parent::Declaration, superparent::Mach
     push!(lines, movtoreg("edx", Int(transition.output2.value[1])))
     push!(lines, movtodata("eax", "edx"))
     if transition.output3.value == "RIGHT"
-        push!(lines, addregs("eax", 4))
+        push!(lines, addregs("eax", BYTE_ADDRESS_MULTIPLIER))
     elseif transition.output3.value == "LEFT"
-        push!(lines, subregs("eax", 4))
+        push!(lines, subregs("eax", BYTE_ADDRESS_MULTIPLIER))
     end
-    push!(lines, movtoreg("ecx", "eax"))
+    push!(lines, movtoreg("cl", "eax"))
     if transition.output1 in superparent.accept.items
         push!(lines, jump("_HALT"))
     else
@@ -206,21 +208,21 @@ function generate(ast::Program)
     initial_position = tape_size >> 1
     
     lines = Vector{String}([createsection(".data")])
-    push!(lines, initdata("tape", "DD", Int('E'), tape_size))
+    push!(lines, initdata("tape", "DB", Int('E'), tape_size))
     push!(lines, createsection(".text"))
     push!(lines, declareglobal("_start"))
     push!(lines, createlabel("_start"))
     for (x, ident) in enumerate(ast.main.arguments)
-        push!(lines, movtoreg("ecx", Int(ident.value[1])))
+        push!(lines, movtoreg("cl", Int(ident.value[1])))
         push!(lines, movtoreg("eax", "tape", is_address = true))
-        push!(lines, movtoreg("ebx", ((initial_position + x - 1)*4)))
+        push!(lines, movtoreg("ebx", ((initial_position + x - 1)*BYTE_ADDRESS_MULTIPLIER)))
         push!(lines, addregs("eax", "ebx"))
-        push!(lines, movtodata("eax", "ecx"))
+        push!(lines, movtodata("eax", "cl"))
     end
-    push!(lines, movtoreg("ebx", initial_position*4))
+    push!(lines, movtoreg("ebx", initial_position*BYTE_ADDRESS_MULTIPLIER))
     push!(lines, movtoreg("eax", "tape"; is_address = true))
     push!(lines, addregs("eax", "ebx"))
-    push!(lines, movtoreg("ecx", "eax"))
+    push!(lines, movtoreg("cl", "eax"))
     push!(lines, jump(ast.main.name.value))
 
     for machine in ast.machines
