@@ -1,10 +1,13 @@
 abstract type ASTNode end
 
-struct MachineRef <: ASTNode
+abstract type UnaryNode{T <: Union{Token, ASTNode, Vector{Token}, Vector{ASTNode}}} <: ASTNode end
+abstract type BinaryNode{T, S <: Union{Token, ASTNode, Vector{Token}, Vector{ASTNode}}} <: ASTNode end
+
+struct MachineRef{T} <: UnaryNode{T}
     name::Identifier
 end
 
-struct Goto <: ASTNode
+struct Goto{T} <: UnaryNode
     value::Union{MachineRef, Identifier}
 end
 
@@ -12,23 +15,23 @@ struct Transition <: ASTNode
     input::Identifier
     output1::Goto
     output2::Identifier
-    output3::Direction
+    output3::Literal
 end
 
-struct Declaration <: ASTNode
+struct Declaration <: BinaryNode
     name::Identifier
     list::Vector{Transition}
 end
 
-struct Accepter <: ASTNode
+struct Accepter <: UnaryNode
     items::Vector{Goto}
 end
 
-struct Recogniser <: ASTNode
+struct Recogniser <: UnaryNode
     items::Vector{Identifier}
 end
 
-struct Starter <: ASTNode
+struct Starter <: UnaryNode
     item::Goto
 end
 
@@ -40,12 +43,12 @@ struct MachineDef <: ASTNode
     content::Vector{Declaration}
 end
 
-struct MachineCall <: ASTNode
+struct MachineCall <: BinaryNode
     name::Identifier
     arguments::Vector{Identifier}
 end
 
-struct Program <: ASTNode
+struct Program <: BinaryNode
     machines::Vector{MachineDef}
     main::MachineCall
 end
@@ -74,7 +77,7 @@ end
 function parse!(tokens::TokenStream, ::Type{T} where T <: MachineRef)
     name = nothing
     current = peek!(tokens)
-    if current isa Referencer
+    if current isa Punctuator && current.value == "@"
         consume!(tokens)
         current = peek!(tokens)
     else
@@ -91,7 +94,7 @@ end
 function parse!(tokens::TokenStream, ::Type{T} where T <: Goto)
     value = nothing
     current = peek!(tokens)
-    if current isa Referencer
+    if current isa Punctuator && current.value == "@"
         value = parse!(tokens, MachineRef)
         current = peek!(tokens)
     elseif current isa Identifier
@@ -116,21 +119,21 @@ function parse!(tokens::TokenStream, ::Type{T} where T <: Transition)
         throw(error("Parser error: 'Transition' must start with an 'Identifier', not '$(typeof(current))'."))
     end
     
-    if current isa Map
+    if current isa Punctuator && current.value == "->"
         consume!(tokens)
         current = peek!(tokens)
     else
         throw(error("Parser error: Expected '->' after input value, not '$(typeof(current))'."))
     end
 
-    if current isa Identifier || current isa Referencer
+    if current isa Identifier || (current isa Punctuator && current.value == "@")
         output1 = parse!(tokens, Goto)
         current = peek!(tokens)
     else
         throw(error("Parser error: Expected 'Identifier' after '->', not '$(typeof(current))'."))
     end
 
-    if current isa Comma
+    if current isa Punctuator && current.value == ","
         consume!(tokens)
         current = peek!(tokens)
     else
@@ -144,14 +147,14 @@ function parse!(tokens::TokenStream, ::Type{T} where T <: Transition)
         throw(error("Parser error: Expected 'Identifier', not '$(typeof(current))'."))
     end
 
-    if current isa Comma
+    if current isa Punctuator && current.value == ","
         consume!(tokens)
         current = peek!(tokens)
     else
         throw(error("Parser error: Expected ',' not '$(typeof(current))'."))
     end
 
-    if current isa Direction
+    if current isa Literal
         output3 = consume!(tokens)
         current = peek!(tokens)
     else
@@ -174,7 +177,7 @@ function parse!(tokens::TokenStream, ::Type{T} where T <: Declaration)
 
     current = peek!(tokens)
 
-    if current isa State
+    if current isa Keyword && current.value == "state"
         consume!(tokens)
         current = peek!(tokens)
     else
@@ -188,7 +191,7 @@ function parse!(tokens::TokenStream, ::Type{T} where T <: Declaration)
         throw(error("Parser error: state name must be 'Identifier', not '$(typeof(current))'."))
     end
 
-    if current isa Colon
+    if current isa Punctuator && current.value == ":"
         consume!(tokens)
         current = peek!(tokens)
     else
@@ -202,8 +205,8 @@ function parse!(tokens::TokenStream, ::Type{T} where T <: Declaration)
         throw(error("Parser error: Expected newline after ':', not '$(typeof(current))'."))
     end
 
-    if current isa Identifier || current isa Referencer
-        while current isa Identifier || current isa Referencer
+    if current isa Identifier || (current isa Punctuator && current.value == "@")
+        while current isa Identifier || (current isa Punctuator && current.value == "@")
             push!(list, parse!(tokens, Transition))
             current = peek!(tokens)
         end
@@ -212,11 +215,11 @@ function parse!(tokens::TokenStream, ::Type{T} where T <: Declaration)
         throw(error("Parser error: Expected declaration, not'$(typeof(current))'."))
     end
 
-    if current isa Terminator
+    if current isa Punctuator && current.value == "end"
         consume!(tokens)
         current = peek!(tokens)
     else
-        throw(error("Parser error: Expected Terminator: 'END', not '$(typeof(current))'."))
+        throw(error("Parser error: Expected Terminator: 'end', not '$(typeof(current))'."))
     end
 
     if current isa EOL
@@ -233,26 +236,26 @@ function parse!(tokens::TokenStream, ::Type{T} where T <: Accepter)
 
     current = peek!(tokens)
 
-    if current isa Accept
+    if current isa Keyword && current.value == "accept"
         title = consume!(tokens)
         current = peek!(tokens)
     else
         throw(error("Parser error: 'Accepter' should start with 'accept' keyword, not '$(typeof(current))'."))
     end
 
-    if current isa Colon
+    if current isa Punctuator && current.value == ":"
         consume!(tokens)
         current = peek!(tokens)
     else
         throw(error("Parser error: ':' should follow 'accept' keyword, not '$(typeof(current))'."))
     end
 
-    if (current isa Identifier || current isa Referencer)
-        while (current isa Identifier || current isa Referencer)
+    if (current isa Identifier || (current isa Punctuator && current.value == "@"))
+        while (current isa Identifier || (current isa Punctuator && current.value == "@"))
             current = peek!(tokens)
             push!(items, parse!(tokens, Goto))
             current = peek!(tokens)
-            if current isa Comma
+            if current isa Punctuator && current.value == ","
                 consume!(tokens)
                 current = peek!(tokens)
             elseif current isa EOL
@@ -281,14 +284,14 @@ function parse!(tokens::TokenStream, ::Type{T} where T <: Recogniser)
 
     current = peek!(tokens)
 
-    if current isa Recognise
+    if current isa Keyword && current.value == "recognise"
         title = consume!(tokens)
         current = peek!(tokens)
     else
         throw(error("Parser error: 'Recogniser' should start with 'recognise' keyword, not '$(typeof(current))'."))
     end
 
-    if current isa Colon
+    if current isa Punctuator && current.value == ":"
         consume!(tokens)
         current = peek!(tokens)
     else
@@ -300,7 +303,7 @@ function parse!(tokens::TokenStream, ::Type{T} where T <: Recogniser)
             current = peek!(tokens)
             push!(items, consume!(tokens))
             current = peek!(tokens)
-            if current isa Comma
+            if current isa Punctuator && current.value == ","
                 consume!(tokens)
                 current = peek!(tokens)
             elseif current isa EOL
@@ -328,21 +331,21 @@ function parse!(tokens::TokenStream, ::Type{T} where T <: Starter)
 
     current = peek!(tokens)
 
-    if current isa Start
+    if current isa Keyword && current.value == "start"
         title = consume!(tokens)
         current = peek!(tokens)
     else
         throw(error("Parser error: 'Starter' should start with 'start' keyword, not '$(typeof(current))'."))
     end
 
-    if current isa Colon
+    if current isa Punctuator && current.value == ":"
         end_name = consume!(tokens)
         current = peek!(tokens)
     else
         throw(error("Parser error: ':' should follow 'start' keyword, not '$(typeof(current))'."))
     end
 
-    if (current isa Identifier || current isa Referencer)
+    if (current isa Identifier || (current isa Punctuator && current.value == "@"))
         item = parse!(tokens, Goto)
         current = peek!(tokens)
     else
@@ -371,7 +374,7 @@ function parse!(tokens::TokenStream, ::Type{T} where T <: MachineCall)
         throw(error("Parser error: machine call should be an 'Identifier', not '$(typeof(current))'."))
     end
 
-    if current isa LeftParenthesis
+    if current isa Punctuator && current.value == "("
         consume!(tokens)
         current = peek!(tokens)
     else
@@ -382,18 +385,18 @@ function parse!(tokens::TokenStream, ::Type{T} where T <: MachineCall)
         while current isa Identifier
             push!(arguments, consume!(tokens))
             current = peek!(tokens)
-            if current isa Comma
+            if current isa Punctuator && current.value == ","
                 consume!(tokens)
                 current = peek!(tokens)
             else
                 break
             end
         end
-    elseif !(current isa RightParenthesis)
+    elseif !(current isa Punctuator && current.value == ")")
         throw(error("Parser error: Expected 'Identifier' as argument, not '$(typeof(current))'."))
     end
 
-    if current isa RightParenthesis
+    if current isa Punctuator && current.value == ")"
         consume!(tokens)
     else
         throw(error("Parser error: ')' should follow machine name, not '$(typeof(current))'."))
@@ -410,7 +413,7 @@ function parse!(tokens::TokenStream, ::Type{T} where T <: MachineDef)
     content = Vector{Declaration}()
 
     current = peek!(tokens)
-    if current isa Machine
+    if current isa Keyword && current.value == "machine"
         consume!(tokens)
         current = peek!(tokens)
     else
@@ -424,7 +427,7 @@ function parse!(tokens::TokenStream, ::Type{T} where T <: MachineDef)
         throw(error("Parser error: machine name should be an 'Identifier', not '$(typeof(current))'."))
     end
 
-    if current isa Colon
+    if current isa Punctuator && current.value == ":"
         consume!(tokens)
         current = peek!(tokens)
     else
@@ -436,21 +439,21 @@ function parse!(tokens::TokenStream, ::Type{T} where T <: MachineDef)
         current = peek!(tokens)
     end
 
-    if (current isa Accept)
+    if (current isa Keyword && current.value == "accept")
         accept = parse!(tokens, Accepter)
         current = peek!(tokens)
     else
         throw(error("Parser error: Expected 'accept' keyword, not '$(typeof(current))'."))
     end
 
-    if (current isa Start)
+    if (current isa Keyword && current.value == "start")
         start = parse!(tokens, Starter)
         current = peek!(tokens)
     else
         throw(error("Parser error: Expected 'start' keyword, not '$(typeof(current))'."))
     end
 
-    if (current isa Recognise)
+    if (current isa Keyword && current.value == "recognise")
         recognise = parse!(tokens, Recogniser)
         current = peek!(tokens)
     else
@@ -462,8 +465,8 @@ function parse!(tokens::TokenStream, ::Type{T} where T <: MachineDef)
         current = peek!(tokens)
     end
 
-    if current isa State
-        while current isa State
+    if (current isa Keyword && current.value == "state")
+        while (current isa Keyword && current.value == "state")
             push!(content, parse!(tokens, Declaration))
             current = peek!(tokens)
             if current isa EOL
@@ -475,7 +478,7 @@ function parse!(tokens::TokenStream, ::Type{T} where T <: MachineDef)
         throw(error("Parser error: Expected 'Identifier' or '@ Identifier', not '$(typeof(current))'."))
     end
 
-    if current isa Terminator
+    if current isa Punctuator && current.value == "end"
         consume!(tokens)
         current = peek!(tokens)
     else
@@ -493,8 +496,8 @@ function parse!(tokens::TokenStream, ::Type{T} where T <: Program)
     main = nothing
 
     current = peek!(tokens)
-    if current isa Machine
-        while current isa Machine
+    if current isa Keyword && current.value == "machine"
+        while (current isa Keyword && current.value == "machine")
             push!(machines, parse!(tokens, MachineDef))
             current = peek!(tokens)
         end
