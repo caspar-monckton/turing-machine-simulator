@@ -103,7 +103,6 @@ function parse!(tokens::TokenStream, T::Type{S}) where S <: ASTNode
     fields = [(field, fieldtype(T, field)) for field in fieldnames(T)]
     field_names = Vector{Any}(undef, length(fields))
     for (x, field) in enumerate(fields)
-        println(field)
         test = parse!(tokens, field[2])
         field_names[x] = test
     end
