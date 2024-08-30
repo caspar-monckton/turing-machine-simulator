@@ -6,16 +6,21 @@ mutable struct Tokeniser
     position::Integer
 end
 
-struct Token{TokenType} <: AbstractToken
+struct ParametricToken{TokenType, TokenKind} <: AbstractToken
     value::String
 end
-            
-const Whitespace = Token{:Whitespace}
-const Identifier = Token{:Identifier}
-const Punctuator = Token{:Punctuator}
-const Literal    = Token{:Literal}
-const Keyword    = Token{:Keyword}
-const EOL        = Token{:EOL}
+
+struct BasicToken{TokenType} <: AbstractToken
+    value::String
+end
+ 
+const Whitespace    = BasicToken{:Whitespace}
+const Identifier    = BasicToken{:Identifier}
+const EOL           = BasicToken{:EOL}
+const Punctuator{T} = ParametricToken{:Punctuator, T}
+const Literal{T}    = ParametricToken{:Literal, T}
+const Keyword{T}    = ParametricToken{:Keyword, T}
+
 
 mutable struct TokenStream
     tokens::Vector{AbstractToken}
@@ -80,17 +85,41 @@ function lex(file_path::String)
         [
             r"(\t| )+",
             r"\w+",
-            r"state|recognise|start|accept|machine",
-            r":|,|->|end|\)|\(|@",
-            r"STAY|LEFT|RIGHT",
-            r"(\r\n?|\r?\n)+",
+            r"state",
+            r"recognise",
+            r"start",
+            r"accept",
+            r"machine",
+            r":",
+            r",",
+            r"->",
+            r"end",
+            r"\)",
+            r"\(",
+            r"@",
+            r"STAY",
+            r"LEFT",
+            r"RIGHT",
+            r"(\r\n?[ \t]*|\r?\n[ \t]*)+",
         ],
         [
             Whitespace,
             Identifier,
-            Keyword,
-            Punctuator,
-            Literal,
+            Keyword{:state},
+            Keyword{:recognise},
+            Keyword{:start},
+            Keyword{:accept},
+            Keyword{:machine},
+            Punctuator{:colon},
+            Punctuator{:comma},
+            Punctuator{:map},
+            Punctuator{:end},
+            Punctuator{:rightparentheis},
+            Punctuator{:leftparenthesis},
+            Punctuator{:referenceindicator},
+            Literal{:STAY},
+            Literal{:LEFT},
+            Literal{:RIGHT},
             EOL
         ],
         1

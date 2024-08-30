@@ -1,11 +1,17 @@
 const BYTE_ADDRESS_MULTIPLIER = 1
 
 const registers = [
-    "eax", "ebx", "ecx", "edx", 
-    "ax",  "bx",  "cx",  "dx",
-    "al",  "bl",  "cl",  "dl",
-    "ah",  "bh",  "ch",  "dh",
-    "edi", "esi", "ebp", "esp"
+     "eax", "ebx",  "ecx",  "edx", 
+     "ax",   "bx",   "cx",   "dx",
+     "al",   "bl",   "cl",   "dl",
+     "ah",   "bh",   "ch",   "dh",
+    "edi",  "esi",  "ebp",  "esp",
+    "r8d",  "r9d", "r10d", "r11d",
+    "r12d", "r13d", "r14d", "r15d",
+    "r8w",  "r9w", "r10w", "r11w",
+    "r12w", "r13w", "r14w", "r15w",
+    "r8b",  "r9b", "r10b", "r11b",
+    "r12b", "r13b", "r14b", "r15b",
 ]
 
 createlabel(name::String) = "$name:"
@@ -133,12 +139,6 @@ end
 #returns multiple lines of assembly!!
 function writestdout(address::String, size::Integer)::Vector{String}
     out = Vector{String}()
-    # Have to save all the variables to temporary registers.
-    push!(out, movtoreg("ebp", "eax"; is_address = true))
-    push!(out, movtoreg("esi", "ebx"; is_address = true))
-    push!(out, movtoreg("edi", "ecx"; is_address = true))
-
-
 
     push!(out, movtoreg("eax", 4))
     push!(out, movtoreg("ebx", 1))
@@ -146,10 +146,6 @@ function writestdout(address::String, size::Integer)::Vector{String}
     push!(out, movtoreg("edx", size))
     push!(out, interrupt("80h"))
 
-    # restore all vals
-    push!(out, movtoreg("eax", "ebp"; is_address = true))
-    push!(out, movtoreg("ebx", "esi"; is_address = true))
-    push!(out, movtoreg("ecx", "edi"; is_address = true))
     return out
 end
 
@@ -158,20 +154,20 @@ timesinstruction(iterations::Integer, instruction::String) = "\ttimes $iteration
 function generate(transition::Transition, parent::Declaration, superparent::MachineDef)
     lines = Vector{String}()
     push!(lines, createlabel("$(superparent.name.value)_$(parent.name.value)_$(Int(transition.input.value[1]))"))
-    push!(lines, movtoreg("dl", Int(transition.output2.value[1])))
-    push!(lines, movtodata("eax", "dl"))
+    push!(lines, movtoreg("r8b", Int(transition.output2.value[1])))
+    push!(lines, movtodata("r10d", "r8b"))
     if transition.output3.value == "RIGHT"
-        push!(lines, addregs("eax", BYTE_ADDRESS_MULTIPLIER))
+        push!(lines, addregs("r10d", BYTE_ADDRESS_MULTIPLIER))
     elseif transition.output3.value == "LEFT"
-        push!(lines, subregs("eax", BYTE_ADDRESS_MULTIPLIER))
+        push!(lines, subregs("r10d", BYTE_ADDRESS_MULTIPLIER))
     end
-    push!(lines, movtoreg("cl", "eax"))
-    if transition.output1 in superparent.accept.items
+    push!(lines, movtoreg("r9b", "r10d"))
+    if transition.output1 in superparent.accept.items.values
         push!(lines, jump("_HALT"))
     else
-        if transition.output1.value isa MachineRef
-            push!(lines, jump(transition.output1.value.name.value))
-        elseif transition.output1.value isa Identifier
+        if transition.output1.prefix.token == nothing
+            push!(lines, jump(transition.output1.value.value))
+        elseif transition.output1.prefix.token isa Identifier
             push!(lines, jump("$(superparent.name.value)_$(transition.output1.value.value)"))
         end
     end
@@ -182,13 +178,13 @@ function generate(declaration::Declaration, parent::MachineDef)
     lines = Vector{String}()
     push!(lines, createlabel("$(parent.name.value)_$(declaration.name.value)"))
     lines = vcat(lines, writestdout("tape", 1000))
-    for transition in declaration.list
-        push!(lines, compregs("cl", string(Int(transition.input.value[1]))))
+    for transition in declaration.list.values
+        push!(lines, compregs("r9b", string(Int(transition.input.value[1]))))
         push!(lines, jump("$(parent.name.value)_$(declaration.name.value)_$(Int(transition.input.value[1]))", "E"))
     end
     push!(lines, jump("_FAIL"))
 
-    for transition in declaration.list
+    for transition in declaration.list.values
         lines = vcat(lines, generate(transition, declaration, parent))
     end
 
@@ -198,13 +194,9 @@ end
 function generate(machine::MachineDef)
     lines = Vector{String}([createlabel(machine.name.value)])
     start = ""
-    if machine.start.item.value isa MachineRef
-        start = machine.start.item.value.name
-    else
-        start = machine.start.item.value.value
-    end
+    start = machine.start.item.value.value
     push!(lines, jump("$(machine.name.value)_$start"))
-    for declaration in machine.content
+    for declaration in machine.content.values
         lines = vcat(lines, generate(declaration, machine))
     end
     return lines
@@ -219,20 +211,20 @@ function generate(ast::Program)
     push!(lines, createsection(".text"))
     push!(lines, declareglobal("_start"))
     push!(lines, createlabel("_start"))
-    for (x, ident) in enumerate(ast.main.arguments)
-        push!(lines, movtoreg("cl", Int(ident.value[1])))
-        push!(lines, movtoreg("eax", "tape", is_address = true))
-        push!(lines, movtoreg("ebx", ((initial_position + x - 1)*BYTE_ADDRESS_MULTIPLIER)))
-        push!(lines, addregs("eax", "ebx"))
-        push!(lines, movtodata("eax", "cl"))
+    for (x, ident) in enumerate(ast.main.arguments.values)
+        push!(lines, movtoreg("r9b", Int(ident.value[1])))
+        push!(lines, movtoreg("r10d", "tape", is_address = true))
+        push!(lines, movtoreg("r11d", ((initial_position + x - 1)*BYTE_ADDRESS_MULTIPLIER)))
+        push!(lines, addregs("r10d", "r11d"))
+        push!(lines, movtodata("r10d", "r9b"))
     end
-    push!(lines, movtoreg("ebx", initial_position*BYTE_ADDRESS_MULTIPLIER))
-    push!(lines, movtoreg("eax", "tape"; is_address = true))
-    push!(lines, addregs("eax", "ebx"))
-    push!(lines, movtoreg("cl", "eax"))
+    push!(lines, movtoreg("r11d", initial_position*BYTE_ADDRESS_MULTIPLIER))
+    push!(lines, movtoreg("r10d", "tape"; is_address = true))
+    push!(lines, addregs("r10d", "r11d"))
+    push!(lines, movtoreg("r9b", "r10d"))
     push!(lines, jump(ast.main.name.value))
 
-    for machine in ast.machines
+    for machine in ast.machines.values
         lines = vcat(lines, generate(machine))
     end
 

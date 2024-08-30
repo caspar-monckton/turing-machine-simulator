@@ -1,4 +1,4 @@
-#module TuringMachineCompiler
+module TuringMachineCompiler
 
 export compiletml
 
@@ -9,7 +9,6 @@ include("generator.jl")
 function compiletml(source::String, destination::String)
     tokens = lex(source)
     ast = parse!(tokens, Program)
-    prindentln(ast)
     asm = generate(ast)
 
     open(destination, "w") do file
@@ -19,6 +18,4 @@ function compiletml(source::String, destination::String)
     end
 end
 
-#end
-
-compiletml("tm_code/t1.tml", "test1.asm")
+end
