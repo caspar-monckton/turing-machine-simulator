@@ -7,11 +7,7 @@ struct MaybeToken{S <: AbstractToken}
     token::Union{Nothing, S}
 end
 
-struct NodeList{T <:ASTNode, D <: AbstractToken}
-    values::Vector{T}
-end
-
-struct TokenList{T <:AbstractToken, D <: AbstractToken}
+struct NodeList{T <:Union{AbstractToken, ASTNode}, D <: AbstractToken}
     values::Vector{T}
 end
 
@@ -51,7 +47,7 @@ end
 struct Recogniser <: ASTNode
     keyword::Keyword{:recognise}
     delimiter::Punctuator{:colon}
-    items::TokenList{Identifier, Punctuator{:comma}}
+    items::NodeList{Identifier, Punctuator{:comma}}
     eol::EOL
 end
 
@@ -78,7 +74,7 @@ end
 struct MachineCall <: ASTNode
     name::Identifier
     open::Punctuator{:leftparenthesis}
-    arguments::TokenList{Identifier, Punctuator{:comma}}
+    arguments::NodeList{Identifier, Punctuator{:comma}}
     close::Punctuator{:rightparentheis}
 end
 
@@ -88,17 +84,20 @@ struct Program <: ASTNode
     eol::MaybeToken{EOL}
 end
 
-function getfirsttoken(T::Type{Union{S, D, M}}) where {S <: AbstractToken, D <: ASTNode, M <: MaybeToken}
+function getfirsttoken(T)
+    if T <: AbstractToken
+        return T
+    end
     field_name = fieldnames(T)[1]
     field = fieldtype(T, field_name)
-    if field <: ASTNode
+    if T <: ASTNode
+        if field <: MaybeToken
+            return Union{field.parameters[1], fieldtype(T, fieldnames(T)[2])}
+        end
         return getfirsttoken(field)
-    elseif field <: MaybeToken
-        return Union{field.parameters[1], fieldtype(T, fieldnames(T)[2])}
     end
     return field
 end
-
 
 function parse!(tokens::TokenStream, T::Type{S}) where S <: ASTNode
     fields = [(field, fieldtype(T, field)) for field in fieldnames(T)]
@@ -111,11 +110,13 @@ function parse!(tokens::TokenStream, T::Type{S}) where S <: ASTNode
     return T(field_names...)
 end
 
-
-function parse!(tokens::TokenStream, T::Type{NodeList{D, S}}) where {D <: ASTNode, S <: AbstractToken}
-    eltype, delimtype = D, S
+function parse!(tokens::TokenStream, T::Type{NodeList{D, S}}) where {D <: Union{AbstractToken, ASTNode}, S <: AbstractToken}
+    eltype, delimtype = T.parameters[1], T.parameters[2]
+    println("el: $eltype, del: $delimtype")
     vector = Vector{eltype}([])
     current = peek!(tokens)
+    print("first token: ")
+    println(getfirsttoken(eltype))
     while current isa getfirsttoken(eltype)
         push!(vector, parse!(tokens, eltype))
         current = peek!(tokens)
@@ -137,22 +138,6 @@ function parse!(tokens::TokenStream, T::(Type{S})) where S <: AbstractToken
     throw(error("Parser Error: Expected '$S', not '$current'."))
 end
 
-function parse!(tokens::TokenStream, T::Type{TokenList{D, S}}) where {D <: AbstractToken, S <: AbstractToken}
-    eltype, delimtype = D, S
-    vector = Vector{eltype}([])
-    current = peek!(tokens)
-    while current isa eltype
-        push!(vector, parse!(tokens, eltype))
-        current = peek!(tokens)
-        if !(current isa delimtype)
-            break
-        end
-        consume!(tokens)
-        current = peek!(tokens)
-    end
-    return TokenList{eltype, delimtype}(vector)
-end
-
 function parse!(tokens::TokenStream, T::Type{MaybeToken{S}}) where S <: AbstractToken
     if isEOF(tokens)
         return MaybeToken{S}(nothing)
@@ -163,4 +148,3 @@ function parse!(tokens::TokenStream, T::Type{MaybeToken{S}}) where S <: Abstract
     end
     return MaybeToken{S}(nothing)
 end
-
