@@ -34,7 +34,28 @@ Main.TuringMachineCompiler
 
 julia> using .TuringMachineCompiler
 
+julia> compiletml("path/to/turingmachine.tml", "turingmachine.asm")
+
+julia>
 ```
+
+And then to assemble, you can use
+
+```shell
+$ nasm -f elf -o turingmachine.o turingmachine.asm
+$ ld -m elf_i386 -o turingmachine turingmachine.o
+```
+
+And finally to run with gdb, I like to use something along the lines of
+
+```shell
+$ gdb turingmachine
+$ (gdb) break _start
+$ (gdb) run
+$ (gdb) si
+```
+
+And then you can just keep stepping through the program. Additionally, using `shell $(gdb) layout asm` is also interesting so you can see the assembly code that is being executed.
 
 ## Turing Machine Language (TML)
 
@@ -96,8 +117,9 @@ writepattern(0, 0, 0)
 
 Machines are declared with the 'machine' keyword. You can declare as many machines as you want, but there can only be one call which must happen after all the declarations have been made, kind of like a main function. You should define the accepting state(s), starting state, and language using the appropriate keywords (in that order). Then you can list as many states as you like. Make sure to enclose the transitions of each state between
 
-```:
-    ... code
+```
+    :
+        ...
     end
 ```
 
