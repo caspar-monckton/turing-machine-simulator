@@ -6,7 +6,7 @@ This source code contains two separate but related projects which are each house
 
 ## Turing Machine Simulator
 
-The first is a turing machine simulator which is located in the TuringMachines.jl file. This enters a commandline type environment where you can modify and run turingmachines through text based commands.
+The first is a turing machine simulator which is located in the TuringMachines.jl file. This provides structs and methods for interfacing with turing machine objects and tapes in order to simulate them.
 
 ### Usage
 
@@ -55,7 +55,11 @@ $ (gdb) run
 $ (gdb) si
 ```
 
-And then you can just keep stepping through the program. Additionally, using `shell $(gdb) layout asm` is also interesting so you can see the assembly code that is being executed.
+And then you can just keep stepping through the program. Additionally, using 
+```shell
+$ (gdb) layout asm
+```
+is also interesting so you can see the assembly code that is being executed.
 
 ## Turing Machine Language (TML)
 
