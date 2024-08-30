@@ -6,7 +6,7 @@ This source code contains two separate but related projects which are each house
 
 ## Turing Machine Simulator
 
-The first is a turing machine simulator which is located in the TuringMachines.jl file. This provides structs and methods for interfacing with turing machine objects and tapes in order to simulate them.
+The first is a turing machine simulator which is located in the TuringMachines.jl file. This provides structs and methods for interfacing with turing machine objects and tapes in order to simulate them. You can also run the main.jl file to get a commandline style interface for interacting with these objects.
 
 ### Usage
 
@@ -55,10 +55,12 @@ $ (gdb) run
 $ (gdb) si
 ```
 
-And then you can just keep stepping through the program. Additionally, using 
+And then you can just keep stepping through the program. Additionally, using
+
 ```shell
 $ (gdb) layout asm
 ```
+
 is also interesting so you can see the assembly code that is being executed.
 
 ## Turing Machine Language (TML)
