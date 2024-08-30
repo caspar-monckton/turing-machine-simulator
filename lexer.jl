@@ -1,34 +1,29 @@
-abstract type Token end
+abstract type AbstractToken end
 
 mutable struct Tokeniser
     token_matchers::Vector{Regex}
-    tokens::Vector{Type{T} where T<:Token}
+    tokens::Vector{Type{T} where T<:AbstractToken}
     position::Integer
 end
 
-struct BasicToken{T} <: Token
+struct ParametricToken{TokenType, TokenKind} <: AbstractToken
     value::String
 end
 
-const Whitespace = BasicToken{:Whitespace}
-const Identifier = BasicToken{:Identifier}
-const Direction = BasicToken{:Direction}
-const Map = BasicToken{:Map}
-const State = BasicToken{:State}
-const Recognise = BasicToken{:Recognise}
-const Start = BasicToken{:Start}
-const Accept = BasicToken{:Accept}
-const Machine = BasicToken{:Machine}
-const Colon = BasicToken{:Colon}
-const Comma = BasicToken{:Comma}
-const EOL = BasicToken{:EOL}
-const Terminator = BasicToken{:Terminator}
-const Referencer = BasicToken{:Referencer}
-const LeftParenthesis = BasicToken{:LeftParenthesis}
-const RightParenthesis = BasicToken{:RightParenthesis}
+struct BasicToken{TokenType} <: AbstractToken
+    value::String
+end
+ 
+const Whitespace    = BasicToken{:Whitespace}
+const Identifier    = BasicToken{:Identifier}
+const EOL           = BasicToken{:EOL}
+const Punctuator{T} = ParametricToken{:Punctuator, T}
+const Literal{T}    = ParametricToken{:Literal, T}
+const Keyword{T}    = ParametricToken{:Keyword, T}
+
 
 mutable struct TokenStream
-    tokens::Vector{Token}
+    tokens::Vector{AbstractToken}
     position::Integer
 end
 
@@ -46,7 +41,7 @@ function isEOF(tokens::TokenStream)
 end
 
 function read_token!(tokeniser::Tokeniser, matchee::String)
-    matches = Vector{Token}()
+    matches = Vector{AbstractToken}()
     for i in tokeniser.position:length(matchee)
         submatchee = String(matchee[tokeniser.position:i])
         atleastonematch = false
@@ -80,7 +75,7 @@ function read_token!(tokeniser::Tokeniser, matchee::String)
     throw(error("Lexer error: Invalid token '$(matchee[tokeniser.position])'."))
 end
 
-function clean!(tokens::TokenStream, T::(Type{U} where U <: Token)...)
+function clean!(tokens::TokenStream, T::(Type{U} where U <: AbstractToken)...)
     map(t -> filter!(x -> !(x isa t), tokens.tokens), collect(T))
     return tokens
 end
@@ -90,43 +85,47 @@ function lex(file_path::String)
         [
             r"(\t| )+",
             r"\w+",
-            r"(STAY)|(LEFT)|(RIGHT)",
-            r"->",
-            r"(state)",
+            r"state",
             r"recognise",
             r"start",
             r"accept",
             r"machine",
             r":",
             r",",
+            r"->",
             r"end",
-            r"@",
             r"\)",
             r"\(",
-            r"(\r\n?|\r?\n)+"
+            r"@",
+            r"STAY",
+            r"LEFT",
+            r"RIGHT",
+            r"(\r\n?[ \t]*|\r?\n[ \t]*)+",
         ],
         [
             Whitespace,
             Identifier,
-            Direction,
-            Map,
-            State,
-            Recognise,
-            Start,
-            Accept,
-            Machine,
-            Colon,
-            Comma,
-            Terminator,
-            Referencer,
-            RightParenthesis,
-            LeftParenthesis,
+            Keyword{:state},
+            Keyword{:recognise},
+            Keyword{:start},
+            Keyword{:accept},
+            Keyword{:machine},
+            Punctuator{:colon},
+            Punctuator{:comma},
+            Punctuator{:map},
+            Punctuator{:end},
+            Punctuator{:rightparentheis},
+            Punctuator{:leftparenthesis},
+            Punctuator{:referenceindicator},
+            Literal{:STAY},
+            Literal{:LEFT},
+            Literal{:RIGHT},
             EOL
         ],
         1
     )
     
-    tokens = Vector{Token}()
+    tokens = Vector{AbstractToken}()
 
     file_string = open(file_path, "r") do file
         read(file, String)
