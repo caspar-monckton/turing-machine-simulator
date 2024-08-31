@@ -140,11 +140,22 @@ end
 function writestdout(address::String, size::Integer)::Vector{String}
     out = Vector{String}()
 
+    # in 32 bit mode we only have 8 registers :(
+    push!(out, movtoreg("edi", "eax"))
+    push!(out, movtoreg("esi", "ebx"))
+    push!(out, movtoreg("bsp", "ecx"))
+    push!(out, movtoreg("esp", "edx"))
+
     push!(out, movtoreg("eax", 4))
     push!(out, movtoreg("ebx", 1))
     push!(out, movtoreg("ecx", address; is_address = true))
     push!(out, movtoreg("edx", size))
     push!(out, interrupt("80h"))
+
+    push!(out, movtoreg("eax", "edi"))
+    push!(out, movtoreg("ebx", "esi"))
+    push!(out, movtoreg("ecx", "bsp"))
+    push!(out, movtoreg("edx", "esp"))
 
     return out
 end
@@ -154,14 +165,14 @@ timesinstruction(iterations::Integer, instruction::String) = "\ttimes $iteration
 function generate(transition::Transition, parent::Declaration, superparent::MachineDef)
     lines = Vector{String}()
     push!(lines, createlabel("$(superparent.name.value)_$(parent.name.value)_$(Int(transition.input.value[1]))"))
-    push!(lines, movtoreg("r8b", Int(transition.output2.value[1])))
-    push!(lines, movtodata("r10d", "r8b"))
+    push!(lines, movtoreg("cl", Int(transition.output2.value[1])))
+    push!(lines, movtodata("eax", "cl"))
     if transition.output3.value == "RIGHT"
-        push!(lines, addregs("r10d", BYTE_ADDRESS_MULTIPLIER))
+        push!(lines, addregs("eax", BYTE_ADDRESS_MULTIPLIER))
     elseif transition.output3.value == "LEFT"
-        push!(lines, subregs("r10d", BYTE_ADDRESS_MULTIPLIER))
+        push!(lines, subregs("eax", BYTE_ADDRESS_MULTIPLIER))
     end
-    push!(lines, movtoreg("r9b", "r10d"))
+    push!(lines, movtoreg("dl", "eax"))
     if transition.output1 in superparent.accept.items.values
         push!(lines, jump("_HALT"))
     else
@@ -179,7 +190,7 @@ function generate(declaration::Declaration, parent::MachineDef)
     push!(lines, createlabel("$(parent.name.value)_$(declaration.name.value)"))
     lines = vcat(lines, writestdout("tape", 1000))
     for transition in declaration.list.values
-        push!(lines, compregs("r9b", string(Int(transition.input.value[1]))))
+        push!(lines, compregs("dl", string(Int(transition.input.value[1]))))
         push!(lines, jump("$(parent.name.value)_$(declaration.name.value)_$(Int(transition.input.value[1]))", "E"))
     end
     push!(lines, jump("_FAIL"))
@@ -214,16 +225,16 @@ function generate(ast::Program)
     push!(lines, declareglobal("_start"))
     push!(lines, createlabel("_start"))
     for (x, ident) in enumerate(ast.main.arguments.values)
-        push!(lines, movtoreg("r9b", Int(ident.value[1])))
-        push!(lines, movtoreg("r10d", "tape", is_address = true))
-        push!(lines, movtoreg("r11d", ((initial_position + x - 1)*BYTE_ADDRESS_MULTIPLIER)))
-        push!(lines, addregs("r10d", "r11d"))
-        push!(lines, movtodata("r10d", "r9b"))
+        push!(lines, movtoreg("dl", Int(ident.value[1])))
+        push!(lines, movtoreg("eax", "tape", is_address = true))
+        push!(lines, movtoreg("ebx", ((initial_position + x - 1)*BYTE_ADDRESS_MULTIPLIER)))
+        push!(lines, addregs("eax", "ebx"))
+        push!(lines, movtodata("eax", "dl"))
     end
-    push!(lines, movtoreg("r11d", initial_position*BYTE_ADDRESS_MULTIPLIER))
-    push!(lines, movtoreg("r10d", "tape"; is_address = true))
-    push!(lines, addregs("r10d", "r11d"))
-    push!(lines, movtoreg("r9b", "r10d"))
+    push!(lines, movtoreg("ebx", initial_position*BYTE_ADDRESS_MULTIPLIER))
+    push!(lines, movtoreg("eax", "tape"; is_address = true))
+    push!(lines, addregs("eax", "ebx"))
+    push!(lines, movtoreg("dl", "eax"))
     push!(lines, jump(ast.main.name.value))
 
     for machine in ast.machines.values
