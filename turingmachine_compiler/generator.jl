@@ -143,7 +143,7 @@ function writestdout(address::String, size::Integer)::Vector{String}
     # in 32 bit mode we only have 8 registers :(
     push!(out, movtoreg("edi", "eax"))
     push!(out, movtoreg("esi", "ebx"))
-    push!(out, movtoreg("bsp", "ecx"))
+    push!(out, movtoreg("ebp", "ecx"))
     push!(out, movtoreg("esp", "edx"))
 
     push!(out, movtoreg("eax", 4))
@@ -154,7 +154,7 @@ function writestdout(address::String, size::Integer)::Vector{String}
 
     push!(out, movtoreg("eax", "edi"))
     push!(out, movtoreg("ebx", "esi"))
-    push!(out, movtoreg("ecx", "bsp"))
+    push!(out, movtoreg("ecx", "ebp"))
     push!(out, movtoreg("edx", "esp"))
 
     return out
