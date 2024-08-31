@@ -207,7 +207,9 @@ function generate(ast::Program)
     initial_position = tape_size >> 1
     
     lines = Vector{String}([createsection(".data")])
-    push!(lines, initdata("tape", "DB", Int('E'), tape_size))
+    push!(lines, initdata("tape", "DB", 0))
+    push!(lines, initdata("", "DB", Int('E'), tape_size))
+    push!(lines, initdata("", "DB", 0))
     push!(lines, createsection(".text"))
     push!(lines, declareglobal("_start"))
     push!(lines, createlabel("_start"))
