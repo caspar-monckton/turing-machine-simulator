@@ -25,7 +25,8 @@ All the relevant files are linked together into a package called TuringMachines 
 
 The second is a turing machine compiler which converts a custom turing machine language into 32 bit x86 assembly targeted for NASM on Linux. You run the only exported method which is "compiletml" with an input file and specify an output file name. This will save the relevant assembly code to the destination specified which can then further be compiled to an elf or similar using NASM https://www.nasm.us.
 
-*WARNING* Be careful when running these turing machines, as there is currently no logic checking whether they go off the bounds of the preallocated tape (which is 1000 bytes wide). I reccommend running with a debugger such as GDB to avoid it eating up all your tasty RAM.
+Tape is 1000 bytes long and null terminated at both ends to ensure that the machine doesn't eat up ram. It is therefore important that the language of the machine doesn't contain the null character, or ascii 0 otherwise it may continue to eat up ram.
+
 ### Usage
 
 ```julia
