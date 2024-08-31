@@ -177,9 +177,9 @@ function generate(transition::Transition, parent::Declaration, superparent::Mach
         push!(lines, jump("_HALT"))
     else
         if transition.output1.prefix.token == nothing
-            push!(lines, jump(transition.output1.value.value))
-        elseif transition.output1.prefix.token isa Identifier
             push!(lines, jump("$(superparent.name.value)_$(transition.output1.value.value)"))
+        else
+            push!(lines, jump(transition.output1.value.value))
         end
     end
     return lines
