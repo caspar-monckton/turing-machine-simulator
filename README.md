@@ -25,6 +25,7 @@ All the relevant files are linked together into a package called TuringMachines 
 
 The second is a turing machine compiler which converts a custom turing machine language into 32 bit x86 assembly targeted for NASM on Linux. You run the only exported method which is "compiletml" with an input file and specify an output file name. This will save the relevant assembly code to the destination specified which can then further be compiled to an elf or similar using NASM https://www.nasm.us.
 
+*WARNING* Be careful when running these turing machines, as there is currently no logic checking whether they go off the bounds of the preallocated tape (which is 1000 bytes wide). I reccommend running with a debugger such as GDB to avoid it eating up all your tasty RAM.
 ### Usage
 
 ```julia
@@ -132,5 +133,3 @@ Machines are declared with the 'machine' keyword. You can declare as many machin
 blocks. A transition is of the form `<input letter> -> <output letter>, <output state>, <direction>`. When specifying an output state, you may also reference a separate turing machine definition using the '@' symbol before the name of the machine. This will move the program execution into that machine.
 
 When you call a machine, you may specify an input which is given by listing the characters separated by commas. Note that by default the tape is initialised to all 'E' characters. The turing machine will start at the leftmost character specified in the input.
-
-Be careful when running these turing machines, as there is currently no logic checking whether they go off the bounds of the preallocated tape (which is 1000 bytes wide). I reccommend running with a debugger such as GDB to prevent the worst sorts of issues.
