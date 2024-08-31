@@ -111,11 +111,8 @@ end
 
 function parse!(tokens::TokenStream, T::Type{NodeList{D, S}}) where {D <: Union{AbstractToken, ASTNode}, S <: AbstractToken}
     eltype, delimtype = T.parameters[1], T.parameters[2]
-    println("el: $eltype, del: $delimtype")
     vector = Vector{eltype}([])
     current = peek!(tokens)
-    print("first token: ")
-    println(getfirsttoken(eltype))
     while current isa getfirsttoken(eltype)
         push!(vector, parse!(tokens, eltype))
         current = peek!(tokens)
