@@ -2,32 +2,15 @@
 
 This project is written in Julia, and will require Julia to be installed in order to run. You can learn about julia here: https://julialang.org.
 
-This source code contains two separate but related projects which are each housed in separate modules.
-
-## Turing Machine Simulator
-
-The first is a turing machine simulator which is located in the TuringMachines.jl file. This provides structs and methods for interfacing with turing machine objects and tapes in order to simulate them. You can also run the main.jl file to get a commandline style interface for interacting with these objects.
-
-### Usage
-
-```julia
-
-julia> include("path/to/TuringMachines.jl")
-Main.TuringMachines
-
-julia> using .TuringMachines
-
-```
-
-All the relevant files are linked together into a package called TuringMachines which can be included into a julia REPL session or program by adding the above two lines of code.
-
 ## Turing Machine Compiler
 
-The second is a turing machine compiler which converts a custom turing machine language into 32 bit x86 assembly targeted for NASM on Linux. You run the only exported method which is "compiletml" with an input file and specify an output file name. This will save the relevant assembly code to the destination specified which can then further be compiled to an elf or similar using NASM https://www.nasm.us.
+Converts a custom turing machine language into 32 bit x86 assembly targeted for NASM on Linux. You run the only exported method which is "compiletml" with an input file and specify an output file name. This will save the relevant assembly code to the destination specified which can then further be compiled to an elf or similar using NASM https://www.nasm.us.
 
 Tape is 1000 bytes long and null terminated at both ends to ensure that the machine doesn't eat up ram. It is therefore important that the language of the machine doesn't contain the null character, or ascii 0 otherwise it may continue to eat up ram.
 
 ### Usage
+
+All code is located in the turingmachine_compiler directory, and you can include it into a julia REPL session as follows:
 
 ```julia
 
