@@ -123,7 +123,7 @@ end
 writepattern(0, 0, 0)
 ```
 
-Machines are declared with the 'machine' keyword. You can declare as many machines as you want, but there can only be one call which must happen after all the declarations have been made, kind of like a main function. You should define the accepting state(s), starting state, and language using the appropriate keywords (in that order). Then you can list as many states as you like. Make sure to enclose the transitions of each state between
+Machines are declared with the 'machine' keyword. You can declare as many machines as you want, but there can only be one call which must happen after all the declarations have been made, kind of like a main function. You should define the accepting state(s), starting state, and language using the appropriate keywords (in that order). Then you can list as many state transitions as you like. Make sure to enclose the transitions of each state between
 
 ```
     :
