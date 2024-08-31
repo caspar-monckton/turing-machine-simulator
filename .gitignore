@@ -3,3 +3,4 @@ ast_to_x86.txt
 busy_beavers.jl
 *.tml
 *.asm
+turingmachine_simulator/
